@@ -26,6 +26,6 @@ exports.getOpenAiResponse = async (req, res) => {
 
   } catch (error) {
     console.error('OpenAI API Error:', error.message);
-    res.status(500).json({ success: false, message: 'Failed to get reply from AI' });
+    res.status(500).json({ success: false, message: 'error: ' + error.message });
   }
 }
