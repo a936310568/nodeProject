@@ -1,28 +1,34 @@
-const { OpenAI } = require('openai');
+const axios = require('axios');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 exports.getOpenAiResponse = async (req, res) => {
   try {
-    const { message } = req.body; // 从请求体中获取用户消息
+    const { message } = req.body;
+    
+    // 直接调用智谱 API
+    const response = await axios.post(
+      'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+      {
+        model: 'glm-5.1',
+        messages: [
+          { role: 'system', content: '你是一个有用的AI助手。' },
+          { role: 'user', content: message },
+        ],
+        temperature: 1.0,
+        stream: false,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.ZHIPU_API_KEY}`, // 手动添加认证头
+        },
+      }
+    );
 
-    if (!message) {
-      return res.status(400).json({ success: false, message: 'Message is required' });
-    }
-
-    const completion = await openai.chat.completions.create({
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant.' }, 
-        { role: 'user', content: message },
-      ],
-      model: 'gpt-3.5-turbo',
+    res.json({ 
+      success: true, 
+      reply: response.data.choices[0].message.content 
     });
-
-    const aiReply = completion.choices[0].message.content;
-
-    res.json({ success: true, reply: aiReply });
 
   } catch (error) {
     console.error('OpenAI API Error:', error.message);
